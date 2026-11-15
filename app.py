@@ -1,8 +1,17 @@
 import streamlit as st
 from groq import Groq
+from rag import Retriever
 
-MODEL = "openai/gpt-oss-120b"  # model names change; check Groq's docs if you get a "model not found" error
+MODEL = "openai/gpt-oss-120b"
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+
+@st.cache_resource
+def get_retriever():
+    return Retriever()
+
+
+retriever = get_retriever()
 
 SYSTEM = """You are a health information assistant.
 - Give clear, general health information in simple language.
@@ -41,14 +50,32 @@ if prompt := st.chat_input("Ask a health question..."):
     with st.chat_message("assistant"):
         text = EMERGENCY_MSG if any(w in prompt.lower() for w in EMERGENCY_WORDS) else ""
         placeholder = st.empty()
+
+        # ---- RAG part: this is the block that goes before the Groq call ----
+        results = retriever.search(prompt)
+        context = "\n\n".join(f"[Source: {r['source']}]\n{r['text']}" for r in results)
+        system_prompt = SYSTEM
+        if context:
+            system_prompt += (
+                "\n\nUse the reference material below when relevant, and mention that "
+                "it comes from the listed source. If it doesn't cover the question, "
+                "say so and answer cautiously from general knowledge.\n\n" + context
+            )
+        # ---------------------------------------------------------------------
+
         try:
             stream = client.chat.completions.create(
                 model=MODEL,
-                messages=[{"role": "system", "content": SYSTEM}] + st.session_state.messages[-10:],
+                messages=[{"role": "system", "content": system_prompt}]
+                + st.session_state.messages[-10:],
                 stream=True,
             )
             for chunk in stream:
                 text += chunk.choices[0].delta.content or ""
+                placeholder.markdown(text)
+
+            if results:
+                text += "\n\n**Sources:** " + ", ".join(sorted({r["source"] for r in results}))
                 placeholder.markdown(text)
         except Exception as e:
             text += f"Error: {e}"
