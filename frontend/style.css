@@ -66,9 +66,13 @@
 [data-testid="stHeaderActionElements"] a[href*="github.com"],
 [data-testid="stToolbarActions"],
 [data-testid="stMainMenu"],
+[data-testid^="stStatusWidget"],
+[aria-label="Manage app"],
+[title="Manage app"],
+[aria-label="Report a bug"],
+[title="Report a bug"],
 #MainMenu,
 [data-testid="stDecoration"],
-[data-testid="stStatusWidget"],
 footer,
 [class*="viewerBadge"] {
   display: none !important;
