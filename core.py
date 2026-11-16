@@ -9,28 +9,32 @@ Style rules (very important):
 - Start directly with the answer. Do NOT open with sympathy or emotional phrases.
   Never say things like "I'm sorry you're dealing with that", "I'm sorry to hear that",
   "That sounds painful", or "I understand how you feel".
-- Keep a neutral, factual, professional tone. No small talk beyond the conversation
-  rules below, and no filler openings.
+- Keep a neutral, factual, professional tone and no filler openings, except in the
+  conversation rules below, where a friendly tone is right.
 - Treat questions like "what are the symptoms of X" as general information requests.
   Do not assume the user has the condition.
 
 Conversation rules:
+- Questions about YOU are NOT off-topic. This includes "who are you", "what are you",
+  "what can you do", "what is your name", "who made you", "are you a human or a
+  doctor", and "how are you" (also with spelling mistakes). Answer them directly in
+  2 or 3 plain sentences: you are an AI health assistant that explains symptoms,
+  conditions, nutrition and wellness in plain language; you are not a human or a
+  doctor and cannot diagnose, prescribe or replace a doctor. Then ask what health
+  question you can help with. Never refuse these and never say you can only help
+  with health topics.
 - Greetings ("hi", "hello", "hey", "namaste", "good morning"): reply with one short,
   friendly greeting and invite them to ask a health question. Give no health
   information and mention no sources in that reply.
-- "How are you" and similar pleasantries, even with spelling mistakes ("how ar eyou",
-  "hw r u"): reply with one short friendly sentence and invite a health question.
-  Do NOT describe what you can do and do NOT list your limitations.
+- "How are you" and similar pleasantries: reply with one short friendly sentence and
+  invite a health question. Do not list your limitations.
 - Thanks or goodbye: reply with one short, polite sentence.
-- Questions about you, only when clearly asked ("who are you", "what can you do",
-  "what are you"): say you are a health information assistant that explains symptoms,
-  conditions, nutrition and wellness in plain language, and that you cannot diagnose,
-  prescribe, or replace a doctor.
-- Messages unrelated to health (coding, sports, politics, entertainment, general
-  trivia): say politely in one or two sentences that you can only help with health
-  topics, and invite a health question. Do not answer the unrelated question.
-- If a greeting comes together with a health question, answer the health question
-  directly.
+- Messages unrelated to health AND unrelated to you (coding, sports, politics,
+  entertainment, general trivia): say politely in one or two sentences that you can
+  only help with health topics, and invite a health question. Do not answer the
+  unrelated question.
+- If a greeting or pleasantry comes together with a health question, answer the health
+  question directly.
 - Reply in the language the user writes in.
 
 Medicine rules (very important):
@@ -126,9 +130,9 @@ def is_emergency(text):
 
 
 # ---------------------------------------------------------------------------
-# Small talk. Only messages that are NOTHING BUT a greeting, pleasantry, thanks or
-# goodbye are answered here (instantly, without calling the model). Anything else,
-# such as "hi, what causes headache?", goes to the model as usual.
+# Small talk and questions about the assistant. Only messages that are NOTHING BUT
+# one of these are answered here (instantly, without calling the model). Anything
+# else, such as "hi, what causes headache?", goes to the model as usual.
 # Two layers: exact patterns first, then a typo-tolerant match that ignores spaces
 # (so "how ar eyou" still counts as "how are you").
 # ---------------------------------------------------------------------------
@@ -142,6 +146,43 @@ HOW_ARE_YOU_REPLY = (
 )
 THANKS_REPLY = "You're welcome! Ask me anything else about your health whenever you like."
 BYE_REPLY = "Take care! Come back any time you have a health question."
+PRESENT_REPLY = "Yes, I'm here! What health question can I help you with?"
+WHO_ARE_YOU_REPLY = (
+    "I'm a health assistant: an AI that explains symptoms, conditions, nutrition and "
+    "wellness in plain language, using trusted health sources. I can't diagnose "
+    "illnesses, prescribe medicines or replace a doctor. "
+    "What health question can I help you with?"
+)
+WHAT_CAN_YOU_DO_REPLY = (
+    "I can help you with:\n\n"
+    "- Understanding symptoms and common conditions\n"
+    "- Nutrition, fitness and healthy-lifestyle questions\n"
+    "- Explaining what a medical term or test means in general\n"
+    "- Knowing when it's time to see a doctor\n\n"
+    "I can't diagnose, prescribe medicines or replace a doctor. "
+    "What would you like to know?"
+)
+NAME_REPLY = (
+    "I don't have a personal name. I'm a Health Assistant, an AI for general health "
+    "information. What can I help you with?"
+)
+HUMAN_REPLY = (
+    "I'm an AI assistant, not a human and not a doctor. I can share general health "
+    "information, but for diagnosis or treatment please see a qualified doctor. "
+    "What would you like to know?"
+)
+MAKER_REPLY = (
+    "I'm an AI health assistant, built as a software project that combines a language "
+    "model with a library of trusted health sources. I'm not a doctor. "
+    "What health question can I help you with?"
+)
+HELP_REPLY = (
+    "Of course, I'm here to help. Tell me your health question, or the symptoms you're "
+    "worried about. If this is an emergency, call 112 right away."
+)
+
+# optional lead-in words: "hi who are you", "tell me what can you do", "ok thanks"
+_LEAD = r"^((hi+|hel+o+|hey+|ok(ay)?|so|and|please|pls|tell me|can you tell me|could you tell me) )*"
 
 _EXACT = [
     (re.compile(
@@ -149,17 +190,49 @@ _EXACT = [
         r"good (morning|afternoon|evening))"
         r"( (there|everyone|all|team|doctor|bot))?$"), GREETING_REPLY),
     (re.compile(
-        r"^((hi+|hel+o+|hey+) )?(how are you|how are you doing|how are u|how r you|how r u|"
-        r"hw are u|hw r u|hows it going|how do you do|whats up|sup)( today)?$"), HOW_ARE_YOU_REPLY),
+        _LEAD + r"(how are you|how are you doing|how are u|how r you|how r u|hw are u|"
+        r"hw r u|hows it going|how do you do|whats up|sup)( today)?$"), HOW_ARE_YOU_REPLY),
     (re.compile(
         r"^(ok(ay)? )?(thanks|thank you|thank u|thx|ty|many thanks|dhanyavad|shukriya)"
         r"( a lot| so much| very much)?$"), THANKS_REPLY),
     (re.compile(
         r"^(ok(ay)? )?(bye|bye bye|goodbye|good bye|good night|see you|see ya|take care)$"),
      BYE_REPLY),
+    (re.compile(r"^(are you there|are u there|you there|anyone there|is anyone there)$"),
+     PRESENT_REPLY),
+    (re.compile(
+        _LEAD + r"(who are you|who r you|who r u|who are u|who is this|who am i talking to|"
+        r"what are you|what r you|what r u|what are u|what is this|what is this app|"
+        r"what is this bot|what is this chatbot|introduce yourself|tell me about yourself|"
+        r"about yourself|about you)( exactly| really| then| bot)?$"), WHO_ARE_YOU_REPLY),
+    (re.compile(
+        _LEAD + r"(what can you do|what can u do|what do you do|what all can you do|"
+        r"what all can u do|how can you help( me)?|how can u help( me)?|how do you help( me)?|"
+        r"what are your features|what are you capable of|what are your capabilities|"
+        r"what can you help( me)? with|what do you know|how does this work|"
+        r"how do i use this|how to use this)$"), WHAT_CAN_YOU_DO_REPLY),
+    (re.compile(
+        _LEAD + r"(what is your name|whats your name|what are you called|your name|"
+        r"what should i call you|may i know your name|tell me your name|do you have a name|"
+        r"what do they call you)$"), NAME_REPLY),
+    (re.compile(
+        _LEAD + r"(are (you|u) (a |an )?(real )?(human|person|robot|bot|ai|doctor|chatbot|"
+        r"machine|physician)|r u (a |an )?(real )?(human|person|robot|bot|ai|doctor)|"
+        r"are you real|is this (a )?(real )?(doctor|human|person|bot)|"
+        r"am i talking to (a |an )?(human|person|doctor|bot|ai|robot))$"), HUMAN_REPLY),
+    (re.compile(
+        _LEAD + r"(who (made|created|built|developed|designed|trained|programmed) "
+        r"(you|u|this|this app|this bot)|who is your (creator|developer|owner|maker|founder))$"),
+     MAKER_REPLY),
+    (re.compile(
+        _LEAD + r"(help|help me|i need help|can you help( me)?|could you help( me)?|"
+        r"can u help( me)?|need your help|can i ask you something|can i ask something|"
+        r"can i ask a question|i have a question|i have a doubt|i want to ask something|"
+        r"i want to ask a question)$"), HELP_REPLY),
 ]
 
-# Longer phrases only (squashed, no spaces), so short words cannot match by accident
+# Typo-tolerant fallback. Phrases are squashed (no spaces). "who are you" and
+# "what are you" share one reply, so confusing them with each other is harmless.
 _FUZZY = [
     ("hello", GREETING_REPLY),
     ("namaste", GREETING_REPLY),
@@ -173,6 +246,15 @@ _FUZZY = [
     ("thankyou", THANKS_REPLY),
     ("goodbye", BYE_REPLY),
     ("goodnight", BYE_REPLY),
+    ("areyouthere", PRESENT_REPLY),
+    ("whoareyou", WHO_ARE_YOU_REPLY),
+    ("whatareyou", WHO_ARE_YOU_REPLY),
+    ("whatcanyoudo", WHAT_CAN_YOU_DO_REPLY),
+    ("whatisyourname", NAME_REPLY),
+    ("areyouahuman", HUMAN_REPLY),
+    ("areyouadoctor", HUMAN_REPLY),
+    ("whomadeyou", MAKER_REPLY),
+    ("canyouhelpme", HELP_REPLY),
 ]
 _FUZZY_MIN_SCORE = 0.82
 
@@ -184,9 +266,9 @@ def _normalize(text):
 
 
 def smalltalk_reply(text):
-    """Return a fixed reply for a pure greeting, pleasantry, thanks or goodbye, else None."""
+    """Return a fixed reply for small talk or a question about the assistant, else None."""
     t = _normalize(text)
-    if not t or len(t) > 30:
+    if not t or len(t) > 40:
         return None
 
     for pattern, reply in _EXACT:
@@ -194,6 +276,8 @@ def smalltalk_reply(text):
             return reply
 
     squashed = t.replace(" ", "")
+    if len(squashed) < 5:
+        return None
     best_reply, best_score = None, 0.0
     for target, reply in _FUZZY:
         score = difflib.SequenceMatcher(None, squashed, target).ratio()
