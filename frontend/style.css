@@ -28,7 +28,7 @@
   font-size: 0.8rem;
 }
 
-/* Buttons (example questions, new chat) */
+/* Buttons (new chat, example questions) */
 .stButton > button {
   border-radius: 999px;
   border: 1px solid var(--primary);
@@ -48,25 +48,25 @@
   margin-bottom: 0.6rem;
 }
 
-/* Sidebar */
-.side-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
-.side-text { color: var(--muted); font-size: 0.9rem; }
-.emergency-card {
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #7f1d1d;
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  margin: 0.75rem 0;
-  font-size: 0.9rem;
+/* No sidebar at all */
+[data-testid="stSidebar"],
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] {
+  display: none !important;
 }
-.emergency-card h4 { margin: 0 0 0.4rem 0; color: #991b1b; }
-.emergency-card ul { margin: 0 0 0.4rem 1rem; padding: 0; }
-.disclaimer { color: var(--muted); font-size: 0.78rem; }
 
-/* Hide Streamlit toolbar and footer */
-[data-testid="stToolbar"] { visibility: hidden; height: 0; }
-[data-testid="stDecoration"] { display: none; }
-[data-testid="stStatusWidget"] { display: none; }
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
+/* Hide GitHub, Deploy and menu items */
+#GithubIcon,
+.stDeployButton,
+[data-testid="stAppDeployButton"],
+[data-testid="stToolbarActions"],
+[data-testid="stMainMenu"],
+#MainMenu,
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+footer,
+[class*="viewerBadge"] {
+  display: none !important;
+}
