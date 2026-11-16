@@ -1,0 +1,72 @@
+:root {
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+/* Layout */
+.block-container { padding-top: 2rem; max-width: 800px; }
+
+/* Hero banner */
+.hero {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ccfbf1, #e0f2fe);
+  margin-bottom: 1.25rem;
+}
+.hero h1 { margin: 0 0 0.3rem 0; color: #134e4a; font-size: 2rem; }
+.hero p { margin: 0 0 0.9rem 0; color: #115e59; }
+.chips span {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #134e4a;
+  font-size: 0.8rem;
+}
+
+/* Buttons (example questions, new chat) */
+.stButton > button {
+  border-radius: 999px;
+  border: 1px solid var(--primary);
+  transition: all 0.15s ease;
+}
+.stButton > button:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+/* Chat bubbles */
+[data-testid="stChatMessage"] {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Sidebar */
+.side-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+.side-text { color: var(--muted); font-size: 0.9rem; }
+.emergency-card {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #7f1d1d;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+}
+.emergency-card h4 { margin: 0 0 0.4rem 0; color: #991b1b; }
+.emergency-card ul { margin: 0 0 0.4rem 1rem; padding: 0; }
+.disclaimer { color: var(--muted); font-size: 0.78rem; }
+
+/* Hide Streamlit toolbar and footer */
+[data-testid="stToolbar"] { visibility: hidden; height: 0; }
+[data-testid="stDecoration"] { display: none; }
+[data-testid="stStatusWidget"] { display: none; }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
