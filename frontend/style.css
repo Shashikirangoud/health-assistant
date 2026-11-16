@@ -57,10 +57,13 @@
   display: none !important;
 }
 
-/* Hide GitHub, Deploy and menu items */
+/* Hide GitHub/Streamlit branding and app chrome */
 #GithubIcon,
+#stStreamlitLogo,
+[data-testid="stStreamlitLogo"],
 .stDeployButton,
 [data-testid="stAppDeployButton"],
+[data-testid="stHeaderActionElements"] a[href*="github.com"],
 [data-testid="stToolbarActions"],
 [data-testid="stMainMenu"],
 #MainMenu,

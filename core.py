@@ -296,18 +296,3 @@ def build_system_prompt(results):
         "it comes from the listed source. If it doesn't cover the question, "
         "say so and answer cautiously from general knowledge.\n\n" + context
     )
-st.markdown("""
-    <style>
-    #GithubIcon {
-        visibility: hidden;
-    }
-
-    header {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-    </style>
-""", unsafe_allow_html=True)
