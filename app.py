@@ -3,11 +3,11 @@ from pathlib import Path
 import streamlit as st
 from groq import Groq
 from rag import Retriever
+from core import MODEL, EMERGENCY_MSG, is_emergency, build_system_prompt
 
 # set_page_config must be the first Streamlit command
 st.set_page_config(page_title="Health Assistant", page_icon="🩺", layout="centered")
 
-MODEL = "openai/gpt-oss-120b"
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 DEBUG = bool(st.secrets.get("DEBUG", False))  # DEBUG = true in secrets while testing only
 
@@ -33,36 +33,6 @@ def get_retriever():
 
 
 retriever = get_retriever()
-
-# ---------- Content and settings ----------
-SYSTEM = """You are a health information assistant.
-
-Style rules (very important):
-- Start directly with the answer. Do NOT open with sympathy or emotional phrases.
-  Never say things like "I'm sorry you're dealing with that", "I'm sorry to hear that",
-  "That sounds painful", or "I understand how you feel".
-- Keep a neutral, factual, professional tone. No small talk and no filler openings.
-- Treat questions like "what are the symptoms of X" as general information requests.
-  Do not assume the user has the condition.
-
-Content rules:
-- Give clear, general health information in simple language.
-- Never diagnose or prescribe medicines or doses.
-- Suggest seeing a qualified doctor when appropriate.
-- If key details are missing (age, duration, severity), ask one short follow-up question.
-- If the user describes their own symptoms, list the possible general causes, what
-  they can do at home, and which warning signs mean they should see a doctor.
-- If you're unsure, say so."""
-
-EMERGENCY_WORDS = [
-    "chest pain", "can't breathe", "cannot breathe", "difficulty breathing",
-    "stroke", "unconscious", "severe bleeding", "suicide", "kill myself",
-    "overdose", "seizure", "heart attack",
-]
-EMERGENCY_MSG = (
-    "⚠️ **This may be an emergency.** Please call **112** (India) or go to the "
-    "nearest hospital immediately. Don't wait for an online answer.\n\n"
-)
 
 EXAMPLES = [
     "What are the symptoms of dengue?",
@@ -112,18 +82,11 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar="🩺"):
-        text = EMERGENCY_MSG if any(w in prompt.lower() for w in EMERGENCY_WORDS) else ""
+        text = EMERGENCY_MSG if is_emergency(prompt) else ""
         placeholder = st.empty()
 
         results = retriever.search(prompt)
-        context = "\n\n".join(f"[Source: {r['source']}]\n{r['text']}" for r in results)
-        system_prompt = SYSTEM
-        if context:
-            system_prompt += (
-                "\n\nUse the reference material below when relevant, and mention that "
-                "it comes from the listed source. If it doesn't cover the question, "
-                "say so and answer cautiously from general knowledge.\n\n" + context
-            )
+        system_prompt = build_system_prompt(results)
 
         try:
             with st.spinner("Thinking..."):
@@ -148,12 +111,3 @@ if prompt:
             placeholder.markdown(text)
 
     st.session_state.messages.append({"role": "assistant", "content": text})
-    import re
-
-    SYMPATHY_PATTERN = re.compile(
-    r"^\s*(i['’]m|i am) (so )?sorry[^.!\n]*[.!]\s*", re.IGNORECASE
-    )
-
-
-def clean_reply(reply):
-    return SYMPATHY_PATTERN.sub("", reply, count=1)

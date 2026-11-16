@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def load_chunks(folder="knowledge", max_chars=800):
     chunks = []
-    for f in Path(folder).glob("*.txt"):
+    for f in sorted(Path(folder).glob("*.txt")):
         lines = f.read_text(encoding="utf-8").splitlines()
         if not lines:
             continue
@@ -14,11 +14,11 @@ def load_chunks(folder="knowledge", max_chars=800):
         current = ""
         for p in paragraphs:
             if len(current) + len(p) > max_chars and current:
-                chunks.append({"text": current, "source": source})
+                chunks.append({"text": current, "source": source, "file": f.name})
                 current = ""
             current += p + "\n\n"
         if current.strip():
-            chunks.append({"text": current.strip(), "source": source})
+            chunks.append({"text": current.strip(), "source": source, "file": f.name})
     return chunks
 
 

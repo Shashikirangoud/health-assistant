@@ -1,0 +1,6 @@
+{
+  "emergency": [
+    {"q": "jhdbfjhdbsf jhbfdjbfhds jhbdhbsjd ", "expect": true},
+    {"q": "jhdvhj jhbdsjvb jhdsbjhd jbhdhjdwbjc", "expect": false}
+  ]
+}
