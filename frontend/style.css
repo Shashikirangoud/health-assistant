@@ -5,8 +5,8 @@
   --border: #e5e7eb;
 }
 
-/* Layout */
-.block-container { padding-top: 2rem; max-width: 800px; }
+/* Layout (extra top space so content never sits under the pinned button) */
+.block-container { padding-top: 3.5rem; max-width: 800px; }
 
 /* Hero banner */
 .hero {
@@ -28,7 +28,7 @@
   font-size: 0.8rem;
 }
 
-/* Buttons (new chat, example questions) */
+/* Buttons (example questions) */
 .stButton > button {
   border-radius: 999px;
   border: 1px solid var(--primary);
@@ -37,6 +37,26 @@
 .stButton > button:hover {
   background: var(--primary);
   border-color: var(--primary);
+  color: #ffffff;
+}
+
+/* New chat: pinned top-right, always visible, however long the chat is.
+   The z-index is above Streamlit's own header bar so the button stays clickable. */
+.st-key-new_chat {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 1000000;
+  width: auto !important;
+}
+.st-key-new_chat button {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.st-key-new_chat button:hover {
+  background: var(--primary);
   color: #ffffff;
 }
 
@@ -57,22 +77,15 @@
   display: none !important;
 }
 
-/* Hide GitHub/Streamlit branding and app chrome */
+/* Hide GitHub, Deploy and menu items */
 #GithubIcon,
-#stStreamlitLogo,
-[data-testid="stStreamlitLogo"],
 .stDeployButton,
 [data-testid="stAppDeployButton"],
-[data-testid="stHeaderActionElements"] a[href*="github.com"],
 [data-testid="stToolbarActions"],
 [data-testid="stMainMenu"],
-[data-testid^="stStatusWidget"],
-[aria-label="Manage app"],
-[title="Manage app"],
-[aria-label="Report a bug"],
-[title="Report a bug"],
 #MainMenu,
 [data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
 footer,
 [class*="viewerBadge"] {
   display: none !important;
