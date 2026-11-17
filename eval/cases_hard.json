@@ -1,0 +1,28 @@
+{
+  "emergency": [
+    {"q": "seene mein bahut dard ho raha hai", "expect": true},
+    {"q": "mujhe saans nahi aa rahi", "expect": true},
+    {"q": "mujhe marne ka mann kar raha hai", "expect": true},
+    {"q": "bahut khoon beh raha hai ruk nahi raha", "expect": true},
+    {"q": "i cant breathe", "expect": true},
+    {"q": "I think my dad is having a heart atack", "expect": true},
+    {"q": "How do I help someone having a seizure?", "expect": true},
+    {"q": "My grandmother had a stroke last year, how do we prevent another?", "expect": false},
+    {"q": "My heart attack risk is high, how can I reduce it?", "expect": false},
+    {"q": "What is the difference between a stroke and a heart attack?", "expect": false},
+    {"q": "How do I treat chest congestion from a cold?", "expect": false},
+    {"q": "What should I eat after recovering from an overdose-prevention program?", "expect": false}
+  ],
+  "retrieval": [
+    {"q": "constant thirst, urinating a lot and always feeling hungry", "file": "diabetes.txt"},
+    {"q": "headache behind the eyes, joint pain and a rash after mosquito bites", "file": "dengue.txt"},
+    {"q": "I feel weak, look pale and my nails break easily", "file": "anemia.txt"},
+    {"q": "wheezing and coughing at night with a tight feeling in the lungs", "file": "asthma.txt"},
+    {"q": "fever rising slowly over several days with stomach pain after drinking unsafe water", "file": "typhoid.txt"},
+    {"q": "shaking chills and fever that comes in cycles", "file": "malaria.txt"},
+    {"q": "runny nose and sneezing for a few days", "file": "common_cold.txt"},
+    {"q": "throbbing one-sided headache with nausea and sensitivity to light", "file": "migraine.txt"},
+    {"q": "my readings are always above 140 over 90", "file": "hypertension.txt"},
+    {"q": "my toddler's temperature is 39 and she is very sleepy", "file": "fever.txt"}
+  ]
+}

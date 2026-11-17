@@ -1,84 +1,132 @@
+from pathlib import Path
+
 import streamlit as st
 from groq import Groq
 from rag import Retriever
+from core import (
+    MODEL,
+    EMERGENCY_MSG,
+    is_emergency,
+    build_system_prompt,
+    smalltalk_reply,
+)
 
-MODEL = "openai/gpt-oss-120b"
+# set_page_config must be the first Streamlit command
+st.set_page_config(
+    page_title="Health Assistant",
+    page_icon="🩺",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+DEBUG = bool(st.secrets.get("DEBUG", False))  # DEBUG = true in secrets while testing only
+
+FRONTEND = Path(__file__).parent / "frontend"
 
 
-@st.cache_resource
+# ---------- Front-end helpers ----------
+def load_css(filename="style.css"):
+    css = (FRONTEND / filename).read_text(encoding="utf-8")
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+
+def render_html(filename, **values):
+    html = (FRONTEND / filename).read_text(encoding="utf-8")
+    for key, value in values.items():
+        html = html.replace("{{" + key + "}}", value)
+    st.markdown(html, unsafe_allow_html=True)
+
+
+@st.cache_resource(show_spinner=False)
 def get_retriever():
     return Retriever()
 
 
 retriever = get_retriever()
 
-SYSTEM = """You are a health information assistant.
-- Give clear, general health information in simple language.
-- Never diagnose or prescribe medicines or doses.
-- Suggest seeing a qualified doctor when appropriate.
-- Ask a short follow-up question if key details (age, duration, severity) are missing.
-- If you're unsure, say so."""
-
-EMERGENCY_WORDS = [
-    "chest pain", "can't breathe", "cannot breathe", "difficulty breathing",
-    "stroke", "unconscious", "severe bleeding", "suicide", "kill myself",
-    "overdose", "seizure", "heart attack",
+EXAMPLES = [
+    "What are the symptoms of dengue?",
+    "How can I lower my blood pressure naturally?",
+    "What foods help with iron deficiency?",
+    "When should I see a doctor for a fever?",
 ]
-EMERGENCY_MSG = (
-    "⚠️ **This may be an emergency.** Please call **112** (India) or go to the "
-    "nearest hospital immediately. Don't wait for an online answer.\n\n"
-)
 
-st.set_page_config(page_title="Health Assistant", page_icon="🩺")
-st.title("🩺 Health Assistant")
-st.caption("General information only, not a substitute for a doctor. "
-           "Please don't enter names, phone numbers, or other personal details.")
+load_css()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Read the input FIRST (the chat box is always pinned to the bottom of the page),
+# so we know whether a conversation has started before drawing anything else.
+pending = st.session_state.pop("pending", None)
+prompt = pending or st.chat_input("Ask a health question...")
+chatting = bool(st.session_state.messages) or bool(prompt)
+
+if chatting:
+    # During a conversation, the only extra control is New chat
+    if st.button("➕ New chat", key="new_chat"):
+        st.session_state.messages = []
+        st.rerun()
+else:
+    # Start screen: banner and example questions
+    render_html(
+        "hero.html",
+        title="Health Assistant",
+        subtitle="Ask a health question and get clear, simple answers.",
+    )
+    st.write("**Try one of these:**")
+    cols = st.columns(2)
+    for i, q in enumerate(EXAMPLES):
+        if cols[i % 2].button(q, key=f"ex{i}", use_container_width=True):
+            st.session_state.pending = q
+            st.rerun()
+
+# ---------- Chat history ----------
 for m in st.session_state.messages:
-    with st.chat_message(m["role"]):
+    with st.chat_message(m["role"], avatar="🧑" if m["role"] == "user" else "🩺"):
         st.markdown(m["content"])
 
-if prompt := st.chat_input("Ask a health question..."):
+# ---------- Handle input ----------
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="🧑"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
-        text = EMERGENCY_MSG if any(w in prompt.lower() for w in EMERGENCY_WORDS) else ""
+    with st.chat_message("assistant", avatar="🩺"):
         placeholder = st.empty()
+        quick = smalltalk_reply(prompt)  # pure greeting, thanks or goodbye
 
-        # ---- RAG part: this is the block that goes before the Groq call ----
-        results = retriever.search(prompt)
-        context = "\n\n".join(f"[Source: {r['source']}]\n{r['text']}" for r in results)
-        system_prompt = SYSTEM
-        if context:
-            system_prompt += (
-                "\n\nUse the reference material below when relevant, and mention that "
-                "it comes from the listed source. If it doesn't cover the question, "
-                "say so and answer cautiously from general knowledge.\n\n" + context
-            )
-        # ---------------------------------------------------------------------
-
-        try:
-            stream = client.chat.completions.create(
-                model=MODEL,
-                messages=[{"role": "system", "content": system_prompt}]
-                + st.session_state.messages[-10:],
-                stream=True,
-            )
-            for chunk in stream:
-                text += chunk.choices[0].delta.content or ""
-                placeholder.markdown(text)
-
-            if results:
-                text += "\n\n**Sources:** " + ", ".join(sorted({r["source"] for r in results}))
-                placeholder.markdown(text)
-        except Exception as e:
-            text += f"Error: {e}"
+        if quick:
+            text = quick
             placeholder.markdown(text)
+        else:
+            text = EMERGENCY_MSG if is_emergency(prompt) else ""
+            results = retriever.search(prompt)
+            system_prompt = build_system_prompt(results)
+
+            try:
+                with st.spinner("Thinking..."):
+                    stream = client.chat.completions.create(
+                        model=MODEL,
+                        messages=[{"role": "system", "content": system_prompt}]
+                        + st.session_state.messages[-10:],
+                        stream=True,
+                    )
+                    for chunk in stream:
+                        text += chunk.choices[0].delta.content or ""
+                        placeholder.markdown(text)
+
+                if results:
+                    text += "\n\n**Sources:** " + ", ".join(
+                        sorted({r["source"] for r in results})
+                    )
+                    placeholder.markdown(text)
+            except Exception as e:
+                if DEBUG:
+                    text += f"Error: {e}"
+                else:
+                    text += "Sorry, I'm having trouble right now. Please try again in a minute."
+                placeholder.markdown(text)
 
     st.session_state.messages.append({"role": "assistant", "content": text})
